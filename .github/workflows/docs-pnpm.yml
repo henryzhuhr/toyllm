@@ -1,9 +1,9 @@
 name: docs
 
 on:
-  # 每当 push 到 dev 分支时触发部署
+  # 每当 push 到 main 分支时触发部署
   push:
-    branches: [main]
+    branches: [dev]
   # 手动触发部署
   workflow_dispatch:
 
@@ -27,7 +27,7 @@ jobs:
           version: 9
           run_install: |
             - recursive: true
-              args: [--frozen-lockfile, --strict-peer-dependencies]
+              args: [--no-frozen-lockfile, --strict-peer-dependencies]
             - args: [--global, gulp, prettier, typescript]
       
       - name: Build VuePress site

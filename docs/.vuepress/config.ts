@@ -10,7 +10,7 @@ import { gitPlugin } from '@vuepress/plugin-git'
 
 export default defineUserConfig({
     base: '/toyllm/',
-    title: 'toyllm',
+    title: 'ToyLLM项目文档',
     description: '',
     bundler: viteBundler(),
     theme: defaultTheme(),

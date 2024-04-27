@@ -1,11 +1,5 @@
 # CUSTOM_PYTHON_VERSION=3.10 # Uncomment and set to the desired Python version
 
-# bash scripts/get-resource.sh
-# if [ ! -d downloads/CLIP ]; then
-#     echo "Run 'bash scripts/get-resource.sh' first to download resource."
-#     exit 1
-# fi
-
 PROJECT_HOME=$(pwd)
 PROJECT_NAME=$(basename $PROJECT_HOME)
 ENV_NAME=$(echo $PROJECT_NAME | tr '[:upper:]' '[:lower:]')
@@ -37,8 +31,6 @@ fi
 python3 -m pip install --upgrade pip
 python3 -m pip install -r requirements.txt
 
-# cd $PROJECT_HOME/.cache/repo/GroundingDINO
-# python3 -m pip install -e .
 
 # freeze the requirements 
 # python3 -m pip list --format=freeze > requirements.version.txt
