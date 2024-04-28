@@ -2,6 +2,7 @@
 lastUpdated: true
 editLink: true
 footer: true
+outline: deep
 ---
 <!-- ---
 # https://vitepress.dev/reference/default-theme-home-page
@@ -31,7 +32,6 @@ features:
 
 # ToyLLM 项目文档
 
-[[toc]]
 ## 项目介绍
 本项目是一个大模型的集成，计划完成包括对话交流、指令分解、文本实体抽取、文本生成等功能，目前项目处于早期阶段。
 
@@ -117,6 +117,6 @@ python3 infer-chat.py [--model_id MODEL_ID] [--model_path MODEL_PATH] [--device 
 }
 ```
 
-## License
+<!-- ## License
 
-本项目遵循 [GPL-3.0](https://opensource.org/licenses/GPL-3.0) 协议，请遵循协议使用本项目。
+本项目遵循 [GPL-3.0](https://opensource.org/licenses/GPL-3.0) 协议，请遵循协议使用本项目。 -->

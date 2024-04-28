@@ -3,8 +3,8 @@ import { defineConfig } from 'vitepress'
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   base: '/toyllm/',
-  title: "toyllm",
-  description: "A VitePress Site",
+  title: "ToyLLM项目文档",
+  description: "ToyLLM项目文档",
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     // nav: [
@@ -23,9 +23,30 @@ export default defineConfig({
     // ],
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/vuejs/vitepress' }
+      { icon: 'github', link: 'https://github.com/henryzhuhr/toyllm' }
     ],
+    externalLinkIcon: true,
+    footer: {
+      message: '基于 <a href="https://choosealicense.com/licenses/gpl-3.0/">GPL-3.0</a> 许可发布',
+      copyright: `版权所有 © 2024-${new Date().getFullYear()} <a href="https://github.com/HenryZhuHR?tab=repositories">HenryZhuHR</a>`
+    },
+    outline: {
+      label: '页面导航'
+    },
 
+    lastUpdated: {
+      text: '最后更新于',
+      formatOptions: {
+        dateStyle: 'short',
+        timeStyle: 'medium'
+      }
+    },
+    langMenuLabel: '多语言',
+    returnToTopLabel: '回到顶部',
+    sidebarMenuLabel: '菜单',
+    darkModeSwitchLabel: '深色模式开关',
+    lightModeSwitchTitle: '切换到浅色模式',
+    darkModeSwitchTitle: '切换到深色模式'
   },
   markdown: {
     math: true
