@@ -24,6 +24,7 @@ class ExportArgs:
             type=str,
             default="Qwen/Qwen1.5-1.8B-Chat",
             help="The language of the model to use, divided by a : ,such as English:tiny-llama-1b-chat",
+            choices=[config.model_id for config in SUPPORTED_LLM_LIST],
         )
         parser.add_argument(
             "--quan_type",
@@ -35,7 +36,7 @@ class ExportArgs:
         parser.add_argument(
             "--weight_dir",
             type=str,
-            default="weights",
+            default=".cache",
             help="Output directory to save the model and tokenizer",
         )
 
@@ -57,24 +58,25 @@ def main():
             break
 
     # set the export directory
-    export_model_dir = os.path.join(
-        args.weight_dir, f"{args.model_id}-IR-{args.quan_type}"
-    )
+    export_model_dir = os.path.join(args.weight_dir, f"{args.model_id}-IR-{args.quan_type}")
     os.makedirs(export_model_dir, exist_ok=True)
-
-    tokenizer = AutoTokenizer.from_pretrained(
-        args.model_id, trust_remote_code=True
-    )
+    model_kwargs = {
+        "trust_remote_code": True,
+        # "cache_dir": ".cache",
+    }
+    tokenizer = AutoTokenizer.from_pretrained(args.model_id, **model_kwargs)
 
     tokenizer.save_pretrained(export_model_dir)
     print(f" -- [SUCCESS] Tokenizer saved to {export_model_dir}")
 
     model_kwargs = {
         "trust_remote_code": True,
+        # "cache_dir": ".cache",
         "config": AutoConfig.from_pretrained(
-            args.model_id, trust_remote_code=True
+            args.model_id,
+            trust_remote_code=True,
+            #  cache_dir=".cache"
         ),
-        "cache_dir": ".cache",
     }
 
     if args.quan_type == "int4":
@@ -82,17 +84,15 @@ def main():
         ov_model = OVModelForCausalLM.from_pretrained(
             args.model_id,
             export=True,
-            compile=False,
-            quantization_config=OVWeightQuantizationConfig(
-                bits=4, **compression_configs
-            ),
+            compile=True,
+            quantization_config=OVWeightQuantizationConfig(bits=4, **compression_configs),
             **model_kwargs,
         )
     elif args.quan_type == "int8":
         ov_model = OVModelForCausalLM.from_pretrained(
             args.model_id,
             export=True,
-            compile=False,
+            compile=True,
             load_in_8bit=True,
             **model_kwargs,
         )
@@ -100,7 +100,7 @@ def main():
         ov_model = OVModelForCausalLM.from_pretrained(
             args.model_id,
             export=True,
-            compile=False,
+            compile=True,
             load_in_8bit=False,
             **model_kwargs,
         )
