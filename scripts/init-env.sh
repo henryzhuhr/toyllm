@@ -17,7 +17,9 @@ else
     echo "Conda environment '$ENV_PATH' already exists."
 fi
 
-eval "$(conda shell.bash hook)"
+
+
+eval "$(conda shell.$(basename $SHELL) hook)"
 conda activate $ENV_PATH
 echo "Activated $(python --version) in ($ENV_PATH)"
 

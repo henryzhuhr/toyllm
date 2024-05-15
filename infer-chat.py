@@ -1,8 +1,13 @@
 import argparse
+import time
 from typing import List, Tuple
 from threading import Thread
+from sympy import comp
 import torch
-from optimum.intel.openvino import OVModelForCausalLM
+from optimum.intel.openvino import (
+    OVModelForCausalLM,
+    OVWeightQuantizationConfig,
+)
 from transformers import (
     AutoTokenizer,
     AutoConfig,
@@ -27,10 +32,10 @@ class InferArgs:
         parser.add_argument(
             "--model_path",
             type=str,
-            default="weights/Qwen/Qwen1.5-1.8B-Chat-IR-int8",
+            default="weights/Qwen/Qwen1.5-1.8B-Chat-IR-int4",
         )
-        parser.add_argument("--max_sequence_length", type=int, default=1024)
-        parser.add_argument("--device", type=str, default="CPU")
+        parser.add_argument("--max_sequence_length", type=int, default=256)
+        parser.add_argument("--device", type=str, default="AUTO")
         return parser.parse_args()
 
     def __init__(self) -> None:
@@ -46,14 +51,19 @@ def main():
     core = ov.Core()
     print("-- [INFO] Available Devices:", ["AUTO"] + core.available_devices)
 
+    st = time.time()
     tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(
         args.model_path, trust_remote_code=True
     )
+    print(f"-- [INFO] Tokenizer Load Time: {time.time() - st:.2f} s")
     ov_config = {
+        "KV_CACHE_PRECISION": "u8",
+        "DYNAMIC_QUANTIZATION_GROUP_SIZE": "32",
         "PERFORMANCE_HINT": "LATENCY",
         "NUM_STREAMS": "1",
         "CACHE_DIR": "",
     }
+    st = time.time()
     ov_model = OVModelForCausalLM.from_pretrained(
         args.model_path,
         device=args.device,
@@ -62,7 +72,15 @@ def main():
             args.model_path, trust_remote_code=True
         ),
         trust_remote_code=True,
+        quantization_config=OVWeightQuantizationConfig(bits=4),
+        use_cache=True,
+        compile=False,
+        export=False,
     )
+    print(f"-- [INFO] {args.model_id} Load Time: {time.time() - st:.2f} s")
+    st = time.time()
+    ov_model.compile()
+    print(f"-- [INFO] {args.model_id} Compile Time: {time.time() - st:.2f} s")
     model_config: SupportedLLMConfig = None
     for sli in SUPPORTED_LLM_LIST:
         if sli.model_id == args.model_id:
@@ -81,6 +99,7 @@ def main():
         "介绍一下西甲联赛以及国家德比",
         "什么是自由人",
     ]
+
     for input_text in input_texts:
         # while True:
         # input_text = input("用户: ")

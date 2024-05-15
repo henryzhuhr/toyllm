@@ -7,20 +7,20 @@ export default defineConfig({
   description: "ToyLLM项目文档",
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
-    // nav: [
-    //   { text: 'Home', link: '/' },
-    //   { text: 'Examples', link: '/markdown-examples' }
-    // ],
+    nav: [
+      { text: 'Home', link: '/' },
+      // { text: 'Examples', link: '/markdown-examples' }
+    ],
 
-    // sidebar: [
-    //   {
-    //     text: 'Examples',
-    //     items: [
-    //       { text: 'Markdown Examples', link: '/markdown-examples' },
-    //       { text: 'Runtime API Examples', link: '/api-examples' }
-    //     ]
-    //   }
-    // ],
+    sidebar: [
+      {
+        text: 'ToyLLM项目文档导航',
+        items: [
+          { text: '项目使用文档', link: '/usage' },
+          { text: '大模型相关知识学习记录', link: '/preliminary' }
+        ]
+      }
+    ],
 
     socialLinks: [
       { icon: 'github', link: 'https://github.com/henryzhuhr/toyllm' }
@@ -33,7 +33,6 @@ export default defineConfig({
     outline: {
       label: '页面导航'
     },
-
     lastUpdated: {
       text: '最后更新于',
       formatOptions: {
@@ -43,7 +42,7 @@ export default defineConfig({
     },
     langMenuLabel: '多语言',
     returnToTopLabel: '回到顶部',
-    sidebarMenuLabel: '菜单',
+    sidebarMenuLabel: '文档导航',
     darkModeSwitchLabel: '深色模式开关',
     lightModeSwitchTitle: '切换到浅色模式',
     darkModeSwitchTitle: '切换到深色模式'

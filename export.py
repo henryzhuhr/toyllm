@@ -28,7 +28,7 @@ class ExportArgs:
         parser.add_argument(
             "--quan_type",
             type=str,
-            default="int8",
+            default="int4",
             choices=["fp16", "int8", "int4"],
             help="Quantization type to use for the model",
         )
