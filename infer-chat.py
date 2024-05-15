@@ -26,16 +26,14 @@ class InferArgs:
 
     def get_args(self):
         parser = argparse.ArgumentParser()
-        parser.add_argument(
-            "--model_id", type=str, default="Qwen/Qwen1.5-1.8B-Chat"
-        )
+        parser.add_argument("--model_id", type=str, default="Qwen/Qwen1.5-1.8B-Chat")
         parser.add_argument(
             "--model_path",
             type=str,
             default="weights/Qwen/Qwen1.5-1.8B-Chat-IR-int4",
         )
         parser.add_argument("--max_sequence_length", type=int, default=256)
-        parser.add_argument("--device", type=str, default="AUTO")
+        parser.add_argument("--device", type=str, default="CPU")
         return parser.parse_args()
 
     def __init__(self) -> None:
@@ -52,13 +50,10 @@ def main():
     print("-- [INFO] Available Devices:", ["AUTO"] + core.available_devices)
 
     st = time.time()
-    tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(
-        args.model_path, trust_remote_code=True
-    )
+    tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(args.model_path, trust_remote_code=True)
     print(f"-- [INFO] Tokenizer Load Time: {time.time() - st:.2f} s")
     ov_config = {
-        "KV_CACHE_PRECISION": "u8",
-        "DYNAMIC_QUANTIZATION_GROUP_SIZE": "32",
+        # "KV_CACHE_PRECISION": "u8", "DYNAMIC_QUANTIZATION_GROUP_SIZE": "32",  # BUG: error in GPU
         "PERFORMANCE_HINT": "LATENCY",
         "NUM_STREAMS": "1",
         "CACHE_DIR": "",
@@ -68,9 +63,7 @@ def main():
         args.model_path,
         device=args.device,
         ov_config=ov_config,
-        config=AutoConfig.from_pretrained(
-            args.model_path, trust_remote_code=True
-        ),
+        config=AutoConfig.from_pretrained(args.model_path, trust_remote_code=True),
         trust_remote_code=True,
         quantization_config=OVWeightQuantizationConfig(bits=4),
         use_cache=True,
@@ -119,9 +112,7 @@ def main():
         if input_ids.shape[1] > 2000:
             history = [history[-1]]
             input_ids = convert_history_to_token(history)
-        streamer = TextIteratorStreamer(
-            tokenizer, timeout=60.0, skip_prompt=True, skip_special_tokens=True
-        )
+        streamer = TextIteratorStreamer(tokenizer, timeout=60.0, skip_prompt=True, skip_special_tokens=True)
         generate_kwargs = dict(
             input_ids=input_ids,
             max_new_tokens=args.max_sequence_length,

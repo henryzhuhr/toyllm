@@ -16,6 +16,15 @@ fi
 
 python3 -m pip install -r requirements.txt
 
+if [ -d "$INTEL_OPENVINO_DIR" ]; then
+    print_info "OpenVINO found in $INTEL_OPENVINO_DIR"
+    print_info "Installing OpenVINO Python requirements from $INTEL_OPENVINO_DIR/python/requirements.txt"
+    python3 -m pip install -r  $INTEL_OPENVINO_DIR/python/requirements.txt
+else
+    print_warning "OpenVINO not found"
+    print_info "Installing OpenVINO Python requirements from pip"
+    python3 -m pip install openvino-dev
+fi
 
 # freeze the requirements 
 # python3 -m pip list --format=freeze > requirements.version.txt
