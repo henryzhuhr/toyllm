@@ -23,11 +23,14 @@ class InferArgs:
 
     def get_args(self):
         parser = argparse.ArgumentParser()
-        parser.add_argument("--model_id", type=str, default="Qwen/Qwen2-7B")
         parser.add_argument(
+            "-m", "--model_id", type=str, default="Qwen/Qwen2-7B"
+        )
+        parser.add_argument(
+            "-p",
             "--model_path",
             type=str,
-            default="weights/Qwen/Qwen2-&B-IR-int8",
+            default="weights/Qwen/Qwen2-7B-IR-int8",
         )
         parser.add_argument("--max_sequence_length", type=int, default=256)
         parser.add_argument("--device", type=str, default="CPU")
