@@ -1,4 +1,11 @@
+weight/
 weights/
+
+
+tmp/
+tmps/
+temp/
+temps/
 
 # Vuepress/Vitepress
 node_modules

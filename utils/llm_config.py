@@ -48,20 +48,83 @@ class SupportedLLMConfig:
         self.model_kwargs = model_kwargs
 
 
+class LLMModelGroup:
+    Qwen1_5 = [
+        SupportedLLMConfig(
+            "Chinese",
+            "Qwen/Qwen1.5-1.8B-Chat",
+            tokenizer_kwargs={"add_special_tokens": False},
+            model_kwargs={
+                "start_message": DEFAULT_SYSTEM_PROMPT_CHINESE,
+                "stop_tokens": ["<|im_end|>", "<|endoftext|>"],
+            },
+        ),
+        SupportedLLMConfig(
+            "Chinese",
+            "Qwen/Qwen1.5-4b-Chat",
+            tokenizer_kwargs={"add_special_tokens": False},
+            model_kwargs={
+                "start_message": DEFAULT_SYSTEM_PROMPT_CHINESE,
+                "stop_tokens": ["<|im_end|>", "<|endoftext|>"],
+            },
+        ),
+        SupportedLLMConfig(
+            "Chinese",
+            "Qwen/Qwen1.5-7B-Chat",
+            tokenizer_kwargs={"add_special_tokens": False},
+            model_kwargs={
+                "start_message": DEFAULT_SYSTEM_PROMPT_CHINESE,
+                "stop_tokens": ["<|im_end|>", "<|endoftext|>"],
+            },
+        ),
+    ]
+    Qwen2 = [
+        SupportedLLMConfig(
+            "Chinese",
+            "Qwen/Qwen2-0.5B",  # https://huggingface.co/collections/Qwen/qwen2-6659360b33528ced941e557f
+            tokenizer_kwargs={"add_special_tokens": False},
+            model_kwargs={
+                "start_message": DEFAULT_SYSTEM_PROMPT_CHINESE,
+                "stop_tokens": ["<|im_end|>", "<|endoftext|>"],
+            },
+        ),
+        SupportedLLMConfig(
+            "Chinese",
+            "Qwen/Qwen2-1.5B",  # https://huggingface.co/collections/Qwen/qwen2-6659360b33528ced941e557f
+            tokenizer_kwargs={"add_special_tokens": False},
+            model_kwargs={
+                "start_message": DEFAULT_SYSTEM_PROMPT_CHINESE,
+                "stop_tokens": ["<|im_end|>", "<|endoftext|>"],
+            },
+        ),
+        SupportedLLMConfig(
+            "Chinese",
+            "Qwen/Qwen2-7B",  # https://huggingface.co/collections/Qwen/qwen2-6659360b33528ced941e557f
+            tokenizer_kwargs={"add_special_tokens": False},
+            model_kwargs={
+                "start_message": DEFAULT_SYSTEM_PROMPT_CHINESE,
+                "stop_tokens": ["<|im_end|>", "<|endoftext|>"],
+            },
+        ),
+    ]
+
+
 SUPPORTED_LLM_LIST = [
-    SupportedLLMConfig(
-        "English",
-        "THUDM/chatglm3-6b",
-        int4_compression_configs={
-            "sym": True,
-            "group_size": 128,
-            "ratio": 0.72,
-        },
-        tokenizer_kwargs={"add_special_tokens": False},
-    ),
+    *LLMModelGroup.Qwen1_5,
+    *LLMModelGroup.Qwen2,
+    # SupportedLLMConfig(
+    #     "English",
+    #     "THUDM/chatglm3-6b",
+    #     int4_compression_configs={
+    #         "sym": True,
+    #         "group_size": 128,
+    #         "ratio": 0.72,
+    #     },
+    #     tokenizer_kwargs={"add_special_tokens": False},
+    # ),
     SupportedLLMConfig(
         "Chinese",
-        "Qwen/Qwen1.5-1.8B-Chat",
+        "Qwen/Qwen1.5-0.5b-Chat",
         tokenizer_kwargs={"add_special_tokens": False},
         model_kwargs={
             "start_message": DEFAULT_SYSTEM_PROMPT_CHINESE,
