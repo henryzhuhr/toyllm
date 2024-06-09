@@ -16,8 +16,8 @@ class ExportArgs:
     def get_args(self):
         parser = argparse.ArgumentParser()
         # fmt: off
-        parser.add_argument("-m", "--model_id", type=str, default="Qwen/Qwen2-7B", choices=self.MIL)
-        parser.add_argument("-w", "--weight_dir", type=str, default="downloads/Qwen/Qwen2-7B")
+        parser.add_argument("-m", "--model_id", type=str, default="Qwen/Qwen2-1.5B-Instruct", choices=self.MIL)
+        parser.add_argument("-w", "--weight_dir", type=str, default="downloads/Qwen/Qwen2-1.5B-Instruct")
         parser.add_argument("-q", "--quan_type", type=str, default="int8", choices=["fp16", "int8", "int4"])
         parser.add_argument("-s", "--save_dir", type=str, default="weights")
         parser.add_argument("-d", "--device", type=str, default="AUTO")
@@ -94,7 +94,14 @@ def main():
     model_kwargs = {
         "trust_remote_code": True,
         "config": config,
+        "cache_dir": ".cache",
         # cache_dir : https://github.com/huggingface/optimum-intel/issues/347
+    }
+    ov_config = {
+        # "KV_CACHE_PRECISION": "u8", "DYNAMIC_QUANTIZATION_GROUP_SIZE": "32",  # BUG: error in GPU
+        "PERFORMANCE_HINT": "LATENCY",
+        "NUM_STREAMS": "1",
+        "CACHE_DIR": ".cache",
     }
     ov_model: OVModelForCausalLM = None
     if args.quan_type == "int8":
@@ -108,14 +115,13 @@ def main():
         )
     elif args.quan_type == "int4":
         # https://huggingface.co/docs/optimum/main/en/intel/optimization_ov#4-bit
-        compression_configs = llm_config.int4_compression_configs
         quantization_config = OVWeightQuantizationConfig(
-            bits=4, **compression_configs
+            bits=4, **llm_config.int4_compression_configs
         )
         ov_model = OVModelForCausalLM.from_pretrained(
             pretrained_model_name_or_path,
             export=True,
-            compile=True,
+            compile=False,
             quantization_config=quantization_config,
             **model_kwargs,
         )
@@ -123,7 +129,7 @@ def main():
         ov_model = OVModelForCausalLM.from_pretrained(
             pretrained_model_name_or_path,
             export=True,
-            compile=True,
+            compile=False,
             **model_kwargs,
         )
     print(f"\033[00;32m -- [SUCCESS]\033[0m Load model, but not compiled yet.")

@@ -23,8 +23,8 @@ class InferArgs:
     def get_args(self):
         parser = argparse.ArgumentParser()
         # fmt: off
-        parser.add_argument("-m", "--model_id", type=str, default="Qwen/Qwen2-7B")
-        parser.add_argument("-p", "--model_path", type=str, default="weights/Qwen/Qwen2-7B-IR-int8")
+        parser.add_argument("-m", "--model_id", type=str, default="Qwen/Qwen2-1.5B-Instruct")
+        parser.add_argument("-p", "--model_path", type=str, default="weights/Qwen/Qwen2-1.5B-Instruct-IR-int8")
         parser.add_argument("-q", "--quan_type", type=str, default="int8", choices=["fp16", "int8", "int4"])
         parser.add_argument("-l", "--max_sequence_length", type=int, default=8)
         parser.add_argument("-d", "--device", type=str, default="AUTO")
@@ -49,28 +49,40 @@ def main():
     print(f"{INFO} Available Devices:", core.available_devices)
 
     st = time.time()
-    tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(args.model_path, trust_remote_code=True)
+    tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(
+        args.model_path, trust_remote_code=True
+    )
     print(f"{INFO}  Tokenizer Load Time: {time.time() - st:.2f} s")
+    st = time.time()
+
     ov_config = {
-        # "KV_CACHE_PRECISION": "u8", "DYNAMIC_QUANTIZATION_GROUP_SIZE": "32",  # BUG: error in GPU
+        # ==================
+        # -- https://docs.openvino.ai/2024/learn-openvino/llm_inference_guide/llm-inference-hf.html#enabling-openvino-runtime-optimizations
+        # -- "[GPU] SDPA indirect inputs": https://github.com/openvinotoolkit/openvino/pull/24665
+        # ==================
         "PERFORMANCE_HINT": "LATENCY",
         "NUM_STREAMS": "1",
         "CACHE_DIR": ".cache",
     }
-    st = time.time()
-
-    q_config_bits = {"fp16": 16, "int8": 8, "int4": 4}
+    OVModelForCausalLM_from_pretrained_kwargs = {}
     if args.quan_type == "int4":
-        OVModelForCausalLM_from_pretrained_kwargs = {
-            "quantization_config": OVWeightQuantizationConfig(bits=q_config_bits[args.quan_type])
-        }
+        OVModelForCausalLM_from_pretrained_kwargs["quantization_config"] = (
+            OVWeightQuantizationConfig(bits=4)
+        )
+        ov_config["DYNAMIC_QUANTIZATION_GROUP_SIZE"] = "32"
+    elif args.quan_type == "int8":
+        ov_config["KV_CACHE_PRECISION"] = "u8"  # BUG: error in GPU
+        ov_config["DYNAMIC_QUANTIZATION_GROUP_SIZE"] = "32"  # BUG: error in GPU
     else:
         OVModelForCausalLM_from_pretrained_kwargs = {}
-    ov_model = OVModelForCausalLM.from_pretrained(
+
+    ov_model: OVModelForCausalLM = OVModelForCausalLM.from_pretrained(
         args.model_path,
         device=args.device,
         ov_config=ov_config,
-        config=AutoConfig.from_pretrained(args.model_path, trust_remote_code=True),
+        config=AutoConfig.from_pretrained(
+            args.model_path, trust_remote_code=True
+        ),
         trust_remote_code=True,
         compile=False,
         export=False,
@@ -79,6 +91,7 @@ def main():
 
     print(f"{INFO} {args.model_id} Load Time: {time.time() - st:.2f} s")
     st = time.time()
+    ov_model.to(args.device)
     ov_model.compile()
     print(f"{INFO} {args.model_id} Compile Time: {time.time() - st:.2f} s")
     model_config: SupportedLLMConfig = None
@@ -95,8 +108,8 @@ def main():
 
     history = []
     input_texts = [
-        "你好，你是谁",
-        "你的知识储备到哪一年",
+        "你好，你是谁？",
+        "你的知识储备到哪一年？",
         "介绍一下英特尔公司吧",
         "什么是OpenVINO",
         "OpenVINO有什么优势或者特点",
@@ -115,14 +128,16 @@ def main():
             continue
 
         print(f"\033[00;32m  -- [User]\033[0m", input_text)
-        print(f"\033[00;36m  -- [AI Assistant]\033[0m", input_text)
+        print(f"\033[00;36m  -- [AI Assistant]\033[0m:")
 
         history = history + [[parse_text(input_text), ""]]
         input_ids = convert_history_to_token(tokenizer, history, start_message)
         if input_ids.shape[1] > 2000:
             history = [history[-1]]
             input_ids = convert_history_to_token(history)
-        streamer = TextIteratorStreamer(tokenizer, timeout=60.0, skip_prompt=True, skip_special_tokens=True)
+        streamer = TextIteratorStreamer(
+            tokenizer, timeout=60.0, skip_prompt=True, skip_special_tokens=True
+        )
         generate_kwargs = dict(
             input_ids=input_ids,
             max_new_tokens=args.max_sequence_length,
