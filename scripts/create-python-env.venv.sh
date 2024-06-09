@@ -29,5 +29,9 @@ else
 fi
 
 source $ENV_PATH/bin/activate
+echo "Run the following command to activate the environment:"
+echo "source $ENV_PATH/bin/activate"
+echo
+
 
 # pip install -r requirements.txt
