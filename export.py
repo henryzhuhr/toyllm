@@ -23,26 +23,9 @@ class ExportArgs:
             default="Qwen/Qwen2-7B",
             choices=[config.model_id for config in SUPPORTED_LLM_LIST],
         )
-        parser.add_argument(
-            "-s",
-            "--weight_dir",
-            type=str,
-            default=".cache/Qwen/Qwen2-7B",
-            choices=[config.model_id for config in SUPPORTED_LLM_LIST],
-        )
-        parser.add_argument(
-            "-q",
-            "--quan_type",
-            type=str,
-            default="int8",
-            choices=["fp16", "int8", "int4"],
-        )
-        parser.add_argument(
-            "-d",
-            "--save_dir",
-            type=str,
-            default="weights",
-        )
+        parser.add_argument("-s", "--weight_dir", type=str, default=".cache/Qwen/Qwen2-7B")
+        parser.add_argument("-q", "--quan_type", type=str, default="int8", choices=["fp16", "int8", "int4"])
+        parser.add_argument("-d", "--save_dir", type=str, default="weights")
 
         return parser.parse_args()
 
@@ -52,7 +35,7 @@ class ExportArgs:
         self.weight_dir: str = args.weight_dir
         self.quan_type: str = args.quan_type
         self.save_dir: str = args.save_dir
-
+    model_id_list = [config.model_id for config in SUPPORTED_LLM_LIST]
 
 def main():
     args = ExportArgs()
@@ -63,9 +46,7 @@ def main():
             break
 
     # set the export directory
-    export_model_dir = os.path.join(
-        args.save_dir, f"{args.model_id}-IR-{args.quan_type}"
-    )
+    export_model_dir = os.path.join(args.save_dir, f"{args.model_id}-IR-{args.quan_type}")
     if os.path.exists(export_model_dir):
         print(
             f"\033[00;31m -- [WARNING]\033[0m {export_model_dir} already exists."
@@ -74,9 +55,7 @@ def main():
         return 0
     os.makedirs(export_model_dir)
 
-    pretrained_model_name_or_path = (
-        args.weight_dir if os.path.exists(args.weight_dir) else args.model_id
-    )
+    pretrained_model_name_or_path = args.weight_dir if os.path.exists(args.weight_dir) else args.model_id
 
     # ============ Tokenizer ==================
     model_kwargs = {
@@ -87,9 +66,7 @@ def main():
         **model_kwargs,
     )
     tokenizer.save_pretrained(export_model_dir)
-    print(
-        f"\033[00;32m -- [SUCCESS]\033[0m Tokenizer saved to {export_model_dir}"
-    )
+    print(f"\033[00;32m -- [SUCCESS]\033[0m Tokenizer saved to {export_model_dir}")
 
     # ============ LLM ==================
     config = AutoConfig.from_pretrained(
@@ -107,9 +84,7 @@ def main():
         ov_model = OVModelForCausalLM.from_pretrained(
             pretrained_model_name_or_path,
             export=True,  # compile=False,
-            quantization_config=OVWeightQuantizationConfig(
-                bits=4, **compression_configs
-            ),
+            quantization_config=OVWeightQuantizationConfig(bits=4, **compression_configs),
             **model_kwargs,
         )
     elif args.quan_type == "int8":
@@ -127,9 +102,7 @@ def main():
             **model_kwargs,
         )
     ov_model.save_pretrained(export_model_dir)
-    print(
-        f"\033[00;32m -- [SUCCESS]\033[0m LLM Model saved to {export_model_dir}"
-    )
+    print(f"\033[00;32m -- [SUCCESS]\033[0m LLM Model saved to {export_model_dir}")
 
 
 if __name__ == "__main__":
