@@ -29,10 +29,12 @@ for modelid in "${modelid_list[@]}"; do
             compressed_file="$cache_dir/$modelid$suffix"
             if [ -f "$compressed_file" ]; then
                 echo "Decompressing $compressed_file..."
+                modelgroup=$(echo $modelid | cut -d'/' -f1)
+                mkdir -p "$cache_dir/$modelgroup"
                 if [[ "$suffix" == ".zip" ]]; then
-                    unzip -o "$compressed_file" -d "$cache_dir"
+                    unzip -o "$compressed_file" -d "$cache_dir/$modelgroup"
                 else
-                    tar -xf "$compressed_file" -C "$cache_dir"
+                    tar -xf "$compressed_file" -C "$cache_dir/$modelgroup"
                 fi
                 echo "Decompressing weights for $modelid: $compressed_file"
                 found_compressed_file=true

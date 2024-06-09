@@ -93,8 +93,9 @@ def main():
     history = []
     input_texts = [
         "你好，你是谁？",
+        "你的知识储备到哪一年？",
         "介绍一下西甲联赛以及国家德比",
-        "什么是自由人",
+        "tmd，为什么皇马又拿欧冠冠军了",
     ]
 
     for input_text in input_texts:
