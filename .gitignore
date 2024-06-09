@@ -1,6 +1,10 @@
+resource/
+
+download/
+downloads/
+
 weight/
 weights/
-
 
 tmp/
 tmps/

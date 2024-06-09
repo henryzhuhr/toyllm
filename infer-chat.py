@@ -1,8 +1,6 @@
-import os
 import argparse
 import time
 from threading import Thread
-from sympy import comp
 from optimum.intel.openvino import (
     OVModelForCausalLM,
     OVWeightQuantizationConfig,
@@ -45,36 +43,55 @@ class InferArgs:
 def main():
     args = InferArgs()
     core = ov.Core()
-    print("-- [INFO] Available Devices:", core.available_devices)
+    print(
+        "\033[00;32m-- [INFO]\033[0m Available Devices:", core.available_devices
+    )
 
     st = time.time()
-    tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(args.model_path, trust_remote_code=True)
-    print(f"-- [INFO] Tokenizer Load Time: {time.time() - st:.2f} s")
+    tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(
+        args.model_path, trust_remote_code=True
+    )
+    print(
+        f"\033[00;32m-- [INFO]\033[0m Tokenizer Load Time: {time.time() - st:.2f} s"
+    )
     ov_config = {
         # "KV_CACHE_PRECISION": "u8", "DYNAMIC_QUANTIZATION_GROUP_SIZE": "32",  # BUG: error in GPU
         "PERFORMANCE_HINT": "LATENCY",
         "NUM_STREAMS": "1",
-        "CACHE_DIR": os.path.join(".cache"),
+        "CACHE_DIR": ".cache",
     }
     st = time.time()
 
     q_config_bits = {"fp16": 16, "int8": 8, "int4": 4}
+    if args.quan_type == "int4":
+        OVModelForCausalLM_from_pretrained_kwargs = {
+            "quantization_config": OVWeightQuantizationConfig(
+                bits=q_config_bits[args.quan_type]
+            )
+        }
+    else:
+        OVModelForCausalLM_from_pretrained_kwargs = {}
     ov_model = OVModelForCausalLM.from_pretrained(
         args.model_path,
         device=args.device,
         ov_config=ov_config,
-        config=AutoConfig.from_pretrained(args.model_path, trust_remote_code=True),
+        config=AutoConfig.from_pretrained(
+            args.model_path, trust_remote_code=True
+        ),
         trust_remote_code=True,
-        quantization_config=OVWeightQuantizationConfig(bits=q_config_bits[args.quan_type]),
-        use_cache=True,
         compile=False,
         export=False,
+        **OVModelForCausalLM_from_pretrained_kwargs,
     )
 
-    print(f"-- [INFO] {args.model_id} Load Time: {time.time() - st:.2f} s")
+    print(
+        f"\033[00;32m-- [INFO]\033[0m {args.model_id} Load Time: {time.time() - st:.2f} s"
+    )
     st = time.time()
     ov_model.compile()
-    print(f"-- [INFO] {args.model_id} Compile Time: {time.time() - st:.2f} s")
+    print(
+        f"\033[00;32m-- [INFO]\033[0m {args.model_id} Compile Time: {time.time() - st:.2f} s"
+    )
     model_config: SupportedLLMConfig = None
     for sli in SUPPORTED_LLM_LIST:
         if sli.model_id == args.model_id:
@@ -105,17 +122,20 @@ def main():
 
         if input_text.lower() == "clear":
             history = []
-            print("AI助手: 对话历史已清空")
+            print("AI Assistant: Conversation history cleared")
             continue
 
-        print("用户:", input_text)
-        print("AI:", end=" ")
+        print(f"\033[00;32m  -- [User]\033[0m", input_text)
+        print(f"\033[00;36m  -- [AI Assistant]\033[0m", input_text)
+
         history = history + [[parse_text(input_text), ""]]
         input_ids = convert_history_to_token(tokenizer, history, start_message)
         if input_ids.shape[1] > 2000:
             history = [history[-1]]
             input_ids = convert_history_to_token(history)
-        streamer = TextIteratorStreamer(tokenizer, timeout=60.0, skip_prompt=True, skip_special_tokens=True)
+        streamer = TextIteratorStreamer(
+            tokenizer, timeout=60.0, skip_prompt=True, skip_special_tokens=True
+        )
         generate_kwargs = dict(
             input_ids=input_ids,
             max_new_tokens=args.max_sequence_length,

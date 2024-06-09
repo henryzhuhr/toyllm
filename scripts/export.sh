@@ -1,7 +1,6 @@
-source scripts/create-python-env.venv.sh
+echo "Run in Python: $(which python)"
 
-print_info "Run in Python: $(which python)"
-
+local_dir=downloads
 
 model_list=(
     Qwen/Qwen2-0.5B
@@ -19,7 +18,12 @@ quan_type=(
 
 for mi in "${model_list[@]}"; do
     for qt in "${quan_type[@]}"; do
-        print_success "Run: 'python export.py -m $mi -q $qt'"
-        python export.py -m $mi -q $qt
+        echo
+        echo "  -- Run: 'python export.py -m $mi -q $qt'"
+        echo
+        python export.py \
+            -m $mi \
+            -w $local_dir/$mi \
+            -q $qt
     done
 done

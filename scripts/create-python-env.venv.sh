@@ -30,4 +30,4 @@ fi
 
 source $ENV_PATH/bin/activate
 
-pip install -r requirements.txt
+# pip install -r requirements.txt

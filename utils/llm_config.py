@@ -33,19 +33,19 @@ class SupportedLLMConfig:
         self,
         language: str = "English",
         model_id: str = "THUDM/chatglm3-6b",
+        tokenizer_kwargs: Dict = {},
+        model_kwargs: Dict = {},
         int4_compression_configs: Dict[str, Union[bool, float, int]] = {
             "sym": False,
             "group_size": 128,
             "ratio": 0.8,
         },
-        tokenizer_kwargs: Dict = {},
-        model_kwargs: Dict = {},
     ) -> None:
         self.language = language
         self.model_id = model_id
-        self.int4_compression_configs = int4_compression_configs
         self.tokenizer_kwargs = tokenizer_kwargs
         self.model_kwargs = model_kwargs
+        self.int4_compression_configs = int4_compression_configs
 
 
 class LLMModelGroup:
@@ -87,6 +87,11 @@ class LLMModelGroup:
                 "start_message": DEFAULT_SYSTEM_PROMPT_CHINESE,
                 "stop_tokens": ["<|im_end|>", "<|endoftext|>"],
             },
+            int4_compression_configs={
+                "sym": False,
+                "group_size": 128,
+                "ratio": 0.8,
+            },
         ),
         SupportedLLMConfig(
             "Chinese",
@@ -96,6 +101,11 @@ class LLMModelGroup:
                 "start_message": DEFAULT_SYSTEM_PROMPT_CHINESE,
                 "stop_tokens": ["<|im_end|>", "<|endoftext|>"],
             },
+            int4_compression_configs={
+                "sym": False,
+                "group_size": 128,
+                "ratio": 0.8,
+            },
         ),
         SupportedLLMConfig(
             "Chinese",
@@ -104,6 +114,11 @@ class LLMModelGroup:
             model_kwargs={
                 "start_message": DEFAULT_SYSTEM_PROMPT_CHINESE,
                 "stop_tokens": ["<|im_end|>", "<|endoftext|>"],
+            },
+            int4_compression_configs={
+                "sym": False,
+                "group_size": 128,
+                "ratio": 0.8,
             },
         ),
     ]
