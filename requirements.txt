@@ -1,8 +1,17 @@
-transformers>=4.37.2
+--index-url https://download.pytorch.org/whl/cu121
+--extra-index-url https://download.pytorch.org/whl/cpu
+--extra-index-url https://pypi.tuna.tsinghua.edu.cn/simple
+--extra-index-url https://pypi.org/simple
+
+torch
+torchvision
+
+transformers>=4.40.0
 huggingface-hub>=0.21.3
 
 # -- onnx--
 onnx>=1.15.0
+
 # -- openvino --
 # openvino-dev>=2024.0.0
 # openvino>=2024.0.0

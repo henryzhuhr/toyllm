@@ -1,13 +1,29 @@
-source .env/toyllm.venv/bin/activate
+echo "Run in Python: $(which python)"
+
+local_dir=downloads
 
 model_list=(
-    Qwen/Qwen1.5-0.5b-Chat
-    Qwen/Qwen1.5-1.8B-Chat
-    Qwen/Qwen1.5-4b-Chat
-    Qwen/Qwen1.5-7B-Chat
+    Qwen/Qwen2-0.5B
+    Qwen/Qwen2-0.5B-Instruct
+    Qwen/Qwen2-1.5B
+    Qwen/Qwen2-1.5B-Instruct
+    Qwen/Qwen2-7B
 )
 
-for model_id in "${model_list[@]}"; do
-    python export.py --model_id $model_id --quan_type int4
-    python export.py --model_id $model_id --quan_type int8
+quan_type=(
+    fp16
+    int8
+    int4
+)
+
+for mi in "${model_list[@]}"; do
+    for qt in "${quan_type[@]}"; do
+        echo
+        echo "  -- Run: 'python export.py -m $mi -q $qt'"
+        echo
+        python export.py \
+            -m $mi \
+            -w $local_dir/$mi \
+            -q $qt
+    done
 done
