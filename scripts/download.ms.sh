@@ -5,16 +5,16 @@ download_from="https://www.modelscope.cn"
 local_dir=downloads
 
 model_group=(
-    qwen
+    Qwen
 )
 
 modelid_list=(
-    qwen/Qwen2-0.5B
-    qwen/Qwen2-0.5B-Instruct
-    qwen/Qwen2-1.5B
-    qwen/Qwen2-1.5B-Instruct
-    qwen/Qwen2-7B
-    qwen/Qwen2-7B-Instruct
+    Qwen/Qwen2-0.5B
+    Qwen/Qwen2-0.5B-Instruct
+    Qwen/Qwen2-1.5B
+    Qwen/Qwen2-1.5B-Instruct
+    Qwen/Qwen2-7B
+    Qwen/Qwen2-7B-Instruct
 )
 
 for mi in "${modelid_list[@]}"; do

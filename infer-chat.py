@@ -1,5 +1,6 @@
-import argparse
 import time
+import argparse
+from typing import List
 from threading import Thread
 from optimum.intel.openvino import (
     OVModelForCausalLM,
@@ -40,19 +41,27 @@ class InferArgs:
         self.device: str = args.device
 
 
-INFO = "\033[00;32m-- [INFO]\033[0m"
+def printc(type: str, *message: List[str]):
+    if type == "INFO":
+        print(f"\033[00;36m -- [INFO]", *message, "\033[0m")
+    elif type == "SUCCESS":
+        print(f"\033[00;32m -- [SUCCESS]", *message, "\033[0m")
+    elif type == "WARNING":
+        print(f"\033[00;33m -- [WARNING]", *message, "\033[0m")
+    elif type == "ERROR":
+        print(f"\033[00;31m -- [ERROR]", *message, "\033[0m")
+    else:
+        print(*message)
 
 
 def main():
     args = InferArgs()
     core = ov.Core()
-    print(f"{INFO} Available Devices:", core.available_devices)
+    printc("INFO", f"Available Devices: {core.available_devices}")
 
     st = time.time()
-    tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(
-        args.model_path, trust_remote_code=True
-    )
-    print(f"{INFO}  Tokenizer Load Time: {time.time() - st:.2f} s")
+    tokenizer: PreTrainedTokenizer = AutoTokenizer.from_pretrained(args.model_path, trust_remote_code=True)
+    printc("SUCCESS", f"Tokenizer loaded in {time.time() - st:.2f} s")
     st = time.time()
 
     ov_config = {
@@ -66,13 +75,13 @@ def main():
     }
     OVModelForCausalLM_from_pretrained_kwargs = {}
     if args.quan_type == "int4":
-        OVModelForCausalLM_from_pretrained_kwargs["quantization_config"] = (
-            OVWeightQuantizationConfig(bits=4)
-        )
-        ov_config["DYNAMIC_QUANTIZATION_GROUP_SIZE"] = "32"
+        OVModelForCausalLM_from_pretrained_kwargs["quantization_config"] = OVWeightQuantizationConfig(bits=4)
+        # ov_config["DYNAMIC_QUANTIZATION_GROUP_SIZE"] = "32"   # BUG: error in GPU
     elif args.quan_type == "int8":
-        ov_config["KV_CACHE_PRECISION"] = "u8"  # BUG: error in GPU
-        ov_config["DYNAMIC_QUANTIZATION_GROUP_SIZE"] = "32"  # BUG: error in GPU
+        # BUG: [GPU] Attempt to set user property KV_CACHE_PRECISION (u8) which was not registered or internal!
+        # ov_config["KV_CACHE_PRECISION"] = "u8"                # BUG: error in GPU
+        # ov_config["DYNAMIC_QUANTIZATION_GROUP_SIZE"] = "32"   # BUG: error in GPU
+        pass
     else:
         OVModelForCausalLM_from_pretrained_kwargs = {}
 
@@ -80,20 +89,18 @@ def main():
         args.model_path,
         device=args.device,
         ov_config=ov_config,
-        config=AutoConfig.from_pretrained(
-            args.model_path, trust_remote_code=True
-        ),
+        config=AutoConfig.from_pretrained(args.model_path, trust_remote_code=True),
         trust_remote_code=True,
         compile=False,
         export=False,
         **OVModelForCausalLM_from_pretrained_kwargs,
     )
 
-    print(f"{INFO} {args.model_id} Load Time: {time.time() - st:.2f} s")
+    printc("INFO", f"Model '{args.model_id}' Loaded in {time.time() - st:.2f} s")
     st = time.time()
     ov_model.to(args.device)
     ov_model.compile()
-    print(f"{INFO} {args.model_id} Compile Time: {time.time() - st:.2f} s")
+    printc("INFO", f"Model '{args.model_id}' Compiled in {time.time() - st:.2f} s")
     model_config: SupportedLLMConfig = None
     for sli in SUPPORTED_LLM_LIST:
         if sli.model_id == args.model_id:
@@ -135,9 +142,7 @@ def main():
         if input_ids.shape[1] > 2000:
             history = [history[-1]]
             input_ids = convert_history_to_token(history)
-        streamer = TextIteratorStreamer(
-            tokenizer, timeout=60.0, skip_prompt=True, skip_special_tokens=True
-        )
+        streamer = TextIteratorStreamer(tokenizer, timeout=60.0, skip_prompt=True, skip_special_tokens=True)
         generate_kwargs = dict(
             input_ids=input_ids,
             max_new_tokens=args.max_sequence_length,

@@ -9,11 +9,11 @@ model_group=(
 )
 
 modelid_list=(
-    # Qwen/Qwen2-0.5B
-    # Qwen/Qwen2-0.5B-Instruct
-    # Qwen/Qwen2-1.5B
-    # Qwen/Qwen2-1.5B-Instruct
-    # Qwen/Qwen2-7B
+    Qwen/Qwen2-0.5B
+    Qwen/Qwen2-0.5B-Instruct
+    Qwen/Qwen2-1.5B
+    Qwen/Qwen2-1.5B-Instruct
+    Qwen/Qwen2-7B
     Qwen/Qwen2-7B-Instruct
 )
 

@@ -1,5 +1,8 @@
-import argparse, os, gc
+import os
+import gc
 import time
+import argparse
+from typing import List
 from transformers import AutoTokenizer, AutoConfig
 from optimum.intel import OVWeightQuantizationConfig
 from optimum.intel.openvino import (
@@ -35,14 +38,23 @@ class ExportArgs:
     MIL = [config.model_id for config in SUPPORTED_LLM_LIST]  # model id list
 
 
+def printc(type: str, *message: List[str]):
+    if type == "INFO":
+        print(f"\033[00;36m -- [INFO]", *message, "\033[0m")
+    elif type == "SUCCESS":
+        print(f"\033[00;32m -- [SUCCESS]", *message, "\033[0m")
+    elif type == "WARNING":
+        print(f"\033[00;33m -- [WARNING]", *message, "\033[0m")
+    elif type == "ERROR":
+        print(f"\033[00;31m -- [ERROR]", *message, "\033[0m")
+    else:
+        print(*message)
+
+
 def main():
     args = ExportArgs()
-
     core = ov.Core()
-    print(
-        "\033[00;32m -- [INFO]\033[0m Available Devices:",
-        core.available_devices,
-    )
+    printc("INFO", f"Available Devices: {core.available_devices}")
 
     llm_config: SupportedLLMConfig = None
     for config in SUPPORTED_LLM_LIST:
@@ -51,19 +63,15 @@ def main():
             break
 
     # set the export directory
-    export_model_dir = os.path.join(
-        args.save_dir, f"{args.model_id}-IR-{args.quan_type}"
-    )
+    export_model_dir = os.path.join(args.save_dir, f"{args.model_id}-IR-{args.quan_type}")
     if os.path.exists(export_model_dir):
-        print(
-            f"\033[00;33m -- [WARNING]\033[0m {export_model_dir} already exists."
-            "If you want to overwrite, please delete it manually."
+        printc(
+            "WARNING",
+            f"{export_model_dir} already exists." "If you want to overwrite, please delete it manually.",
         )
     os.makedirs(export_model_dir, exist_ok=True)
 
-    pretrained_model_name_or_path = (
-        args.weight_dir if os.path.exists(args.weight_dir) else args.model_id
-    )
+    pretrained_model_name_or_path = args.weight_dir if os.path.exists(args.weight_dir) else args.model_id
 
     # =========================================
     #   Tokenizer
@@ -78,9 +86,7 @@ def main():
     tokenizer.save_pretrained(export_model_dir)
     del tokenizer
     gc.collect()
-    print(
-        f"\033[00;32m -- [SUCCESS]\033[0m Tokenizer saved to {export_model_dir}"
-    )
+    printc("INFO", f"Tokenizer Saved to {export_model_dir}")
 
     # =========================================
     #   LLM
@@ -89,7 +95,8 @@ def main():
         pretrained_model_name_or_path,
         trust_remote_code=True,
     )
-    print(f"\033[00;32m -- [SUCCESS]\033[0m Load config")
+    printc("SUCCESS", "Model config:")
+    print(config)
 
     model_kwargs = {
         "trust_remote_code": True,
@@ -97,13 +104,8 @@ def main():
         "cache_dir": ".cache",
         # cache_dir : https://github.com/huggingface/optimum-intel/issues/347
     }
-    ov_config = {
-        # "KV_CACHE_PRECISION": "u8", "DYNAMIC_QUANTIZATION_GROUP_SIZE": "32",  # BUG: error in GPU
-        "PERFORMANCE_HINT": "LATENCY",
-        "NUM_STREAMS": "1",
-        "CACHE_DIR": ".cache",
-    }
     ov_model: OVModelForCausalLM = None
+    st = time.time()
     if args.quan_type == "int8":
         # https://huggingface.co/docs/optimum/main/en/intel/optimization_ov#8-bit
         ov_model = OVModelForCausalLM.from_pretrained(
@@ -115,9 +117,7 @@ def main():
         )
     elif args.quan_type == "int4":
         # https://huggingface.co/docs/optimum/main/en/intel/optimization_ov#4-bit
-        quantization_config = OVWeightQuantizationConfig(
-            bits=4, **llm_config.int4_compression_configs
-        )
+        quantization_config = OVWeightQuantizationConfig(bits=4, **llm_config.int4_compression_configs)
         ov_model = OVModelForCausalLM.from_pretrained(
             pretrained_model_name_or_path,
             export=True,
@@ -132,20 +132,14 @@ def main():
             compile=False,
             **model_kwargs,
         )
-    print(f"\033[00;32m -- [SUCCESS]\033[0m Load model, but not compiled yet.")
+    printc("SUCCESS", f"Model '{args.model_id}' Loaded in {time.time() - st:.2f} s, but not compiled yet.")
     st = time.time()
     ov_model.to(args.device)
     ov_model.compile()
     et = time.time()
-    print(
-        f"\033[00;32m -- [SUCCESS]\033[0m Model compiled in {et-st:.2f} seconds"
-    )
+    printc("SUCCESS", f"Model '{args.model_id}' Compiled in {et-st:.2f} s")
     ov_model.save_pretrained(export_model_dir)
-    del ov_model
-    gc.collect()
-    print(
-        f"\033[00;32m -- [SUCCESS]\033[0m LLM Model saved to {export_model_dir}"
-    )
+    printc("SUCCESS", f"Export completed. Model '{args.model_id}' saved to {export_model_dir}")
 
 
 if __name__ == "__main__":

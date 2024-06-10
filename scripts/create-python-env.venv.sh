@@ -9,6 +9,7 @@ RED=$(echo -en '\033[00;31m')
 GREEN=$(echo -en '\033[00;32m')
 YELLOW=$(echo -en '\033[00;33m')
 CYAN=$(echo -en '\033[00;36m')
+BLUE=$(echo -en '\033[00;34m')
 
 function print_base     { echo -e "$1- [$2] $3${DEFAULT}"; }
 function print_info     { print_base "$CYAN"    "INFO"      "$1"; }
