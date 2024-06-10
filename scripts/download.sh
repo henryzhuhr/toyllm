@@ -1,5 +1,7 @@
 git lfs install
 
+download_from="https://huggingface.co"
+
 local_dir=downloads
 
 model_group=(
@@ -7,16 +9,16 @@ model_group=(
 )
 
 modelid_list=(
-    Qwen/Qwen2-0.5B
-    Qwen/Qwen2-0.5B-Instruct
-    Qwen/Qwen2-1.5B
-    Qwen/Qwen2-1.5B-Instruct
-    Qwen/Qwen2-7B
-    # Qwen/Qwen2-7B-Instruct
+    # Qwen/Qwen2-0.5B
+    # Qwen/Qwen2-0.5B-Instruct
+    # Qwen/Qwen2-1.5B
+    # Qwen/Qwen2-1.5B-Instruct
+    # Qwen/Qwen2-7B
+    Qwen/Qwen2-7B-Instruct
 )
 
 for mi in "${modelid_list[@]}"; do
-    git clone https://huggingface.co/$mi $HOME/data/$mi
+    git clone $download_from/$mi $HOME/data/$mi
 done
 
 
