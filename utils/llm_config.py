@@ -159,6 +159,34 @@ class LLMModelGroup:
                 "ratio": 0.8,
             },
         ),
+        SupportedLLMConfig(
+            "Chinese",
+            "Qwen/Qwen2-72B",  # https://huggingface.co/collections/Qwen/qwen2-6659360b33528ced941e557f
+            tokenizer_kwargs={"add_special_tokens": False},
+            model_kwargs={
+                "start_message": DEFAULT_SYSTEM_PROMPT_CHINESE,
+                "stop_tokens": ["<|im_end|>", "<|endoftext|>"],
+            },
+            int4_compression_configs={
+                "sym": False,
+                "group_size": 128,
+                "ratio": 0.8,
+            },
+        ),
+        SupportedLLMConfig(
+            "Chinese",
+            "Qwen/Qwen2-72B-Instruct",  # https://huggingface.co/collections/Qwen/qwen2-6659360b33528ced941e557f
+            tokenizer_kwargs={"add_special_tokens": False},
+            model_kwargs={
+                "start_message": DEFAULT_SYSTEM_PROMPT_CHINESE,
+                "stop_tokens": ["<|im_end|>", "<|endoftext|>"],
+            },
+            int4_compression_configs={
+                "sym": False,
+                "group_size": 128,
+                "ratio": 0.8,
+            },
+        ),
     ]
 
 
